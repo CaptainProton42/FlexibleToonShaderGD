@@ -1,0 +1,115 @@
+# Flexible Toon Shader for the Godot Engine
+
+## Features
+
+&emsp;🤸Flexibility through parameters like number of cuts/bands, steepness, and wrap  
+&emsp;🎨 Supports custom color ramps  
+&emsp;🌈 Affected by the colors of light sources and ambient light in the scene  
+&emsp;💡 Allows for multiple light sources  
+&emsp;⛱️ Supports shadows and attenuation  
+&emsp;✨ Visual extras like specular reflections and rim lighting  
+&emsp;🖼️ Supports textures for albedo and specular  
+
+## Installation
+
+Simply drop the `addons` folder in your project root. You can find the toon shader material at `addons/flexible_toon_shader/FlexibleToonShader.tres`.
+
+*Note*: The repository contains an example scene at `addons/flexible_toon_shader/example`. You can remove this folder if you want to keep the install size small.
+
+## Settings
+
+The following shader parameters are available:
+
+`albedo`
+
+Base color of the mesh.
+
+`albedo_texture`
+
+Use a texture for the base color (will be multiplied with `albedo`).
+
+`clamp_diffuse_to_max`
+
+When using multiple light sources, instead of adding every light, the diffuse color will use the brighted light. This can make a scene with multiple light sources look more consistent (see below).
+
+![](images/clamp_light.png)
+
+Example with `clamp_diffuse_to_max` enabled (left) and disabled (right).
+
+`cuts`
+
+The number of *cuts* used for toon shading. Set to `1` for "classical" toon shading with a single hard border.
+
+`wrap`
+
+Adds a bias to the calculation for diffuse shading, essentially moving the halfway point between the lit and dark sides of an object.
+
+![](images/wrap.png)
+
+Shading of an object with `wrap` set to `0` (left) and `0.4` (right). Note that the position of the light is the same in both cases.
+
+`steepness`
+
+Controls how steep the transition from lit to dark areas should be, essentially shrinking the widths of all bands. (Has no effect when `cuts` is set to `1`).
+
+`use_attenuation`
+
+Allows objects to cast shadows on the mesh. Also needed for proper attenuation when using `OmniLight` nodes in your scene.
+
+*Note*: You might need to set `wrap` to a slightly negative value (e.g. `-0.1`) for this to work properly.
+
+`use_specular`
+
+Adds a specular reflection blob based on Blinn-Phong shading.
+
+`specular_strength`
+
+Brightness of the specular blob. Does not change its size.
+
+`specular_shininess`
+
+Controls the size of the specular blob. Larger values will result in a smaller blob.
+
+`specular_map`
+
+Use a texture for specular reflection. This will be multiplied with the specular result so bright areas will be more reflective than dark areas.
+
+`use_rim`
+
+Enables simple rim lighting.
+
+`rim_width`
+
+Controls the width of the rim. Note that *smaller* values will result in a *larger* rim.
+
+`rim_color`
+
+Custom color of the rim effect to blend with the light color. The alpha component controls the brightness of the rim.
+
+`use_ramp`
+
+Use a custom ramp texture for coloring each band.
+
+![](images/color_ramp.png)
+
+*Note*: If you're sampling from a texture with a discrete palette of colors, make sure to adjust the `cuts` parameter accordingly.
+
+Ambient light, light color and parameters like `albedo` will affect the output color of the ramp. If you want to preserve the colors exactly as they are, make sure to either disable all ambient light sources or uncomment `render_mode ambient_light_disabled` in the shader file and make sure all lights in your scene are white.
+
+`ramp`
+
+(Horizontal) texture used for the color ramp. Godot's built-in `GradientTexture` can be used.
+
+## Troubleshooting
+
+### `use_attenuation` looks weird/too bright.
+
+You may need to set `wrap` to a slightly negative value, e.g. `-0.1`.
+
+### My color ramp doesn't look like the texture.
+
+If you use a pixelated texture as the palette for the color ramp, make sure you import it with *Repeat* and *Filter* disabled. Also make sure no ambient light or light colors are changing the colors of the object.
+
+## License
+
+This repository is licensed under the MIT license.
