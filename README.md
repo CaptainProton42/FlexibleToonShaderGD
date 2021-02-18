@@ -14,7 +14,13 @@
 
 ## Installation
 
-Simply drop the `addons` folder in your project root. You can find the toon shader material at `addons/flexible_toon_shader/FlexibleToonShader.tres`.
+### Godot Asset Library
+
+The shader is available in the [Godot Asset Library](https://godotengine.org/asset-library/asset/873) directly from the editor.
+
+### Download from GitHub
+
+Simply download the repository contents and drop the `addons` folder in your project root. You can find the toon shader material at `addons/flexible_toon_shader/FlexibleToonShader.tres`.
 
 *Note*: The repository contains an example scene at `addons/flexible_toon_shader/example`. You can remove this folder if you want to keep the install size small.
 
@@ -32,7 +38,7 @@ Use a texture for the base color (will be multiplied with `albedo`).
 
 * `clamp_diffuse_to_max`
 
-When using multiple light sources, instead of adding every light, the diffuse color will use the brighted light. This can make a scene with multiple light sources look more consistent (see below).
+When using multiple light sources, instead of adding every light, the diffuse color will use only the brightest light. This can make a scene with multiple light sources look more consistent (see below).
 
 ![](images/clamp_light.png)
 
