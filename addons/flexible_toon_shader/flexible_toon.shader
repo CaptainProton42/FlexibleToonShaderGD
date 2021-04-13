@@ -32,16 +32,6 @@ uniform float border_width = 0.01f;
 varying vec3 vertex_pos;
 varying vec3 normal;
 
-vec4 triplanar_texture(sampler2D p_sampler,vec3 p_weights,vec3 p_triplanar_pos, mat2 orientation) {
-	p_weights = abs(p_weights);
-	p_weights /= p_weights.x+p_weights.y+p_weights.z;
-	vec4 samp=vec4(0.0);
-	samp+= texture(p_sampler,orientation*p_triplanar_pos.xy) * p_weights.z;
-	samp+= texture(p_sampler,orientation*p_triplanar_pos.xz) * p_weights.y;
-	samp+= texture(p_sampler,orientation*p_triplanar_pos.zy * vec2(-1.0,1.0)) * p_weights.x;
-	return samp;
-}
-
 float split_specular(float specular) {
 	return step(0.5f, specular);
 }
