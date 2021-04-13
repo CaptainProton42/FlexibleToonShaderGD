@@ -10,9 +10,9 @@ uniform bool clamp_diffuse_to_max = false;
 
 uniform int cuts : hint_range(1, 8) = 3;
 uniform float wrap : hint_range(-2.0f, 2.0f) = 0.0f;
-uniform float steepness : hint_range(1.0f, 8.0f) = 1.0f;
+uniform float steepness : hint_range(1.0f, 8.0f);
 
-uniform bool use_attenuation = false;
+uniform bool use_attenuation = true;
 
 uniform bool use_specular = true;
 uniform float specular_strength : hint_range(0.0f, 1.0f) = 1.0f;
@@ -26,21 +26,29 @@ uniform vec4 rim_color : hint_color = vec4(1.0f);
 uniform bool use_ramp = false;
 uniform sampler2D ramp : hint_albedo;
 
-float staircase(int n, float x) {
-	float res = 0.0f;
-	float inc = 1.0f / float(n+1);
-	for (float edge = 0.0f; edge < 1.0f - inc; edge+=inc) {
-		res += step(edge, x);
-	}
-	return res / float(n);
-}
+uniform bool use_borders = false;
+uniform float border_width = 0.01f;
 
-float split_diffuse(float diffuse) {
-	return staircase(cuts, diffuse*steepness);
+varying vec3 vertex_pos;
+varying vec3 normal;
+
+vec4 triplanar_texture(sampler2D p_sampler,vec3 p_weights,vec3 p_triplanar_pos, mat2 orientation) {
+	p_weights = abs(p_weights);
+	p_weights /= p_weights.x+p_weights.y+p_weights.z;
+	vec4 samp=vec4(0.0);
+	samp+= texture(p_sampler,orientation*p_triplanar_pos.xy) * p_weights.z;
+	samp+= texture(p_sampler,orientation*p_triplanar_pos.xz) * p_weights.y;
+	samp+= texture(p_sampler,orientation*p_triplanar_pos.zy * vec2(-1.0,1.0)) * p_weights.x;
+	return samp;
 }
 
 float split_specular(float specular) {
 	return step(0.5f, specular);
+}
+
+void vertex() {
+	vertex_pos = VERTEX;
+	normal = NORMAL;
 }
 
 void fragment() {
@@ -56,13 +64,26 @@ void light() {
 	
 	// Diffuse lighting.
 	float NdotL = dot(NORMAL, LIGHT);
-	float diffuse_amount = split_diffuse((NdotL * attenuation + wrap));
+	float diffuse_amount = NdotL + (attenuation - 1.0) + wrap;
+	//float diffuse_amount = NdotL * attenuation + wrap;
+	diffuse_amount *= steepness;
+	float cuts_inv = 1.0f / float(cuts);
+	float diffuse_stepped = clamp(diffuse_amount + mod(1.0f - diffuse_amount, cuts_inv), 0.0f, 1.0f);
+
+	// Calculate borders.
+	float border = 0.0f;
+	if (use_borders) {
+		float corr_border_width = length(cross(NORMAL, LIGHT)) * border_width * steepness;
+		border = step(diffuse_stepped - corr_border_width, diffuse_amount)
+				 - step(1.0 - corr_border_width, diffuse_amount);
+	}
 	
+	// Apply diffuse result to different styles.
 	vec3 diffuse = ALBEDO.rgb * LIGHT_COLOR / PI;
 	if (use_ramp) {
-		diffuse *= texture(ramp, vec2(diffuse_amount, 0.0f)).rgb;
+		diffuse *= texture(ramp, vec2(diffuse_stepped * (1.0f - border), 0.0f)).rgb;
 	} else {
-		diffuse *= diffuse_amount;
+		diffuse *= diffuse_stepped * (1.0f - border);
 	}
 	
 	if (clamp_diffuse_to_max) {
