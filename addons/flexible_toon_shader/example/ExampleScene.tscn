@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://addons/flexible_toon_shader/example/CupMaterial.tres" type="Material" id=1]
+[ext_resource path="res://addons/flexible_toon_shader/example/CupMaterialHatch.tres" type="Material" id=2]
 [ext_resource path="res://addons/flexible_toon_shader/example/cup.obj" type="ArrayMesh" id=3]
 
 [sub_resource type="Environment" id=1]
@@ -24,7 +25,12 @@ __meta__ = {
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource( 1 )
 
-[node name="Cup" type="MeshInstance" parent="."]
-transform = Transform( 0.414137, 0, -0.910214, 0, 1, 0, 0.910215, 0, 0.414137, 0, -1, 0 )
+[node name="CupToon" type="MeshInstance" parent="."]
+transform = Transform( 0.414137, 0, -0.910214, 0, 1, 0, 0.910215, 0, 0.414137, 0, -1, -1.5 )
 mesh = ExtResource( 3 )
 material/0 = ExtResource( 1 )
+
+[node name="CupHatch" type="MeshInstance" parent="."]
+transform = Transform( 0.414137, 0, -0.910214, 0, 1, 0, 0.910215, 0, 0.414137, 0, -1, 1.5 )
+mesh = ExtResource( 3 )
+material/0 = ExtResource( 2 )
