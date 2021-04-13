@@ -128,6 +128,8 @@ Ambient light, light color and parameters like `albedo` will affect the output c
 
 The toon hatching shader is similar to the main toon shader but takes an additional *single rectangular* texture input. This pattern is then repeated to create a (cross) hatching effect.
 
+The shader is available as a *separate* material at `addons/flexible_toon_shader/HatchToonMaterial.tres`.
+
 ## Troubleshooting
 
 ### `use_attenuation` looks weird/too bright.
