@@ -8,7 +8,7 @@
   * [Download from GitHub](#download-from-github)
 * [Settings](#settings)
 * [Toon Hatching Shader](#toon-hatching-shader)
-* [Troubeshooting](#troubleshooting)
+* [Troubleshooting](#troubleshooting)
 * [License](#license)
 
 ![](images/screenshot.png)
