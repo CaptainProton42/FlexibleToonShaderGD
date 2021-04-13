@@ -4,30 +4,25 @@ shader_type spatial;
 
 const float PI = 3.1415926536f;
 
+const mat2 ORIENTATION_STRAIGHT = mat2(vec2(1.0f, 0.0f), vec2(0.0f, 1.0f));
+const mat2 ORIENTATION_CROSS = mat2(vec2(0.0f, 1.0f), vec2(1.0, 0.0f));
+
 uniform vec4 albedo : hint_color = vec4(1.0f);
 uniform sampler2D albedo_texture : hint_albedo;
-uniform bool clamp_diffuse_to_max = false;
 
-uniform int cuts : hint_range(1, 8) = 3;
+uniform int cuts : hint_range(1, 8) = 2;
 uniform float wrap : hint_range(-2.0f, 2.0f) = 0.0f;
 uniform float steepness : hint_range(1.0f, 8.0f);
 
 uniform bool use_attenuation = true;
 
-uniform bool use_specular = true;
-uniform float specular_strength : hint_range(0.0f, 1.0f) = 1.0f;
-uniform float specular_shininess : hint_range(0.0f, 32.0f) = 16.0f;
-uniform sampler2D specular_map : hint_albedo;
-
-uniform bool use_rim = true;
+uniform bool use_rim = false;
 uniform float rim_width : hint_range(0.0f, 16.0f) = 8.0f;
 uniform vec4 rim_color : hint_color = vec4(1.0f);
 
-uniform bool use_ramp = false;
-uniform sampler2D ramp : hint_albedo;
-
-uniform bool use_borders = false;
-uniform float border_width = 0.01f;
+uniform float hatch_scale = 2.0f;
+uniform bool use_triplanar = true;
+uniform sampler2D hatch_texture : hint_albedo;
 
 varying vec3 vertex_pos;
 varying vec3 normal;
@@ -42,8 +37,28 @@ vec4 triplanar_texture(sampler2D p_sampler,vec3 p_weights,vec3 p_triplanar_pos, 
 	return samp;
 }
 
-float split_specular(float specular) {
-	return step(0.5f, specular);
+float split_hatch(float diffuse, vec2 uv, vec3 weights, vec3 pos) {
+	float value = 1.0f;
+	float k = round((1.0f - diffuse) * float(cuts)) - 0.5;
+	for (float i = 0.0f; i < k; ++i) {
+		float offset = 2.0 * i / float(cuts);
+		
+		if (i >= float(cuts) / 2.0) {
+			if (use_triplanar) {
+				value *= triplanar_texture(hatch_texture, weights, pos + vec3(offset), ORIENTATION_CROSS).r;
+			} else {
+				value *= texture(hatch_texture, uv.yx + vec2(offset)).r;
+			}
+		} else {
+			if (use_triplanar) {
+				value *= triplanar_texture(hatch_texture, weights, pos + vec3(offset), ORIENTATION_STRAIGHT).r;
+			} else {
+				value *= texture(hatch_texture, uv.xy + vec2(offset)).r;
+			}			
+		}
+		
+	}
+	return value;
 }
 
 void vertex() {
@@ -65,44 +80,15 @@ void light() {
 	// Diffuse lighting.
 	float NdotL = dot(NORMAL, LIGHT);
 	float diffuse_amount = NdotL + (attenuation - 1.0) + wrap;
-	//float diffuse_amount = NdotL * attenuation + wrap;
 	diffuse_amount *= steepness;
 	float cuts_inv = 1.0f / float(cuts);
 	float diffuse_stepped = clamp(diffuse_amount + mod(1.0f - diffuse_amount, cuts_inv), 0.0f, 1.0f);
-
-	// Calculate borders.
-	float border = 0.0f;
-	if (use_borders) {
-		float corr_border_width = length(cross(NORMAL, LIGHT)) * border_width * steepness;
-		border = step(diffuse_stepped - corr_border_width, diffuse_amount)
-				 - step(1.0 - corr_border_width, diffuse_amount);
-	}
 	
 	// Apply diffuse result to different styles.
 	vec3 diffuse = ALBEDO.rgb * LIGHT_COLOR / PI;
-	if (use_ramp) {
-		diffuse *= texture(ramp, vec2(diffuse_stepped * (1.0f - border), 0.0f)).rgb;
-	} else {
-		diffuse *= diffuse_stepped * (1.0f - border);
-	}
+	diffuse *= split_hatch(diffuse_stepped, hatch_scale*UV, normal, hatch_scale*vertex_pos);
 	
-	if (clamp_diffuse_to_max) {
-		// Clamp diffuse to max for multiple light sources.
-		DIFFUSE_LIGHT = max(DIFFUSE_LIGHT, diffuse);
-	} else {
-		DIFFUSE_LIGHT += diffuse;
-	}
-	
-	// Specular lighting.
-	if (use_specular) {
-		vec3 H = normalize(LIGHT + VIEW);
-		float NdotH = dot(NORMAL, H);
-		float specular_amount = max(pow(NdotH, specular_shininess*specular_shininess), 0.0f)
-							    * texture(specular_map, UV).r
-								* attenuation;
-		specular_amount = split_specular(specular_amount);
-		SPECULAR_LIGHT += specular_strength * specular_amount * LIGHT_COLOR;
-	}
+	DIFFUSE_LIGHT = max(DIFFUSE_LIGHT, diffuse);
 	
 	// Simple rim lighting.
 	if (use_rim) {

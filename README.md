@@ -1,5 +1,16 @@
 # Flexible Toon Shader for the Godot Engine
 
+## Table of contents
+
+* [Features](#features)
+* [Installation](#installation)
+  * [Godot Asset Library](#godot-asset-library)
+  * [Download from GitHub](#download-from-github)
+* [Settings](#settings)
+* [Toon Hatching Shader](#toon-hatching-shader)
+* [Troubleshooting](#troubleshooting)
+* [License](#license)
+
 ![](images/screenshot.png)
 
 ## Features
@@ -10,7 +21,10 @@
 &emsp;💡 Allows for multiple light sources  
 &emsp;⛱️ Supports shadows and attenuation  
 &emsp;✨ Visual extras like specular reflections and rim lighting  
-&emsp;🖼️ Supports textures for albedo and specular  
+&emsp;🖼️ Supports textures for albedo and specular
+
+**New**:<br>
+&emsp;✏️ Experimental [toon hatching shader](#toon-hatching-shader) (available as a separate material)
 
 ## Installation
 
@@ -20,7 +34,7 @@ The shader is available in the [Godot Asset Library](https://godotengine.org/ass
 
 ### Download from GitHub
 
-Simply download the repository contents and drop the `addons` folder in your project root. You can find the toon shader material at `addons/flexible_toon_shader/FlexibleToonShader.tres`.
+Simply download the repository contents and drop the `addons` folder in your project root. You can find the toon shader material at `addons/flexible_toon_shader/FlexibleToonMaterial.tres`. The (experimental) toon hatching shader material is located at `addons/flexible_toon_shader/HatchToonMaterial.tres`.
 
 *Note*: The repository contains an example scene at `addons/flexible_toon_shader/example`. You can remove this folder if you want to keep the install size small.
 
@@ -108,6 +122,12 @@ Ambient light, light color and parameters like `albedo` will affect the output c
 
 (Horizontal) texture used for the color ramp. Godot's built-in `GradientTexture` can be used.
 
+## Toon Hatching Shader
+
+![](images/toon_hatch.png)
+
+The toon hatching shader is similar to the main toon shader but takes an additional *single rectangular* texture input. This pattern is then repeated to create a (cross) hatching effect.
+
 ## Troubleshooting
 
 ### `use_attenuation` looks weird/too bright.
@@ -116,7 +136,7 @@ You may need to set `wrap` to a slightly negative value, e.g. `-0.1`.
 
 ### My color ramp doesn't look like the texture.
 
-If you use a pixelated texture as the palette for the color ramp, make sure you import it with *Repeat* and *Filter* disabled. Also make sure no ambient light or light colors are changing the colors of the object.
+If you use a pixelated texture as the palette for the color ramp, make sure you import it with *Repeat* and *Filter* disabled. Also make sure no ambient light or light colors are changing the colors of the object. You can also switch between triplanar mapping and UVs with the flag `use_triplanar`.
 
 ## License
 
